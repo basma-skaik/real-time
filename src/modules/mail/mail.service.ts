@@ -20,5 +20,6 @@ export class MailService {
     } catch (error) {
       throw new Error(`Error sending confirmation email: ${error}`);
     }
+    
   }
 }
