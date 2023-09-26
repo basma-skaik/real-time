@@ -4,46 +4,36 @@ import {
   Model,
   PrimaryKey,
   AutoIncrement,
-  AllowNull,
   DataType,
+  ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
-import { Role } from 'src/common/constants';
+import { User } from '../user/user.model';
 
 @Table({
-  tableName: 'User',
+  tableName: 'Staff',
   timestamps: true,
   underscored: true,
   paranoid: true,
 })
-export class User extends Model<User> {
+export class Staff extends Model<Staff> {
   @PrimaryKey
   @AutoIncrement
   @Column
   id: number;
 
+  @ForeignKey(() => User) 
   @Column
-  name: string;
+  userId: number;
+
+  @BelongsTo(() => User) 
+  user: User;
 
   @Column
-  email: string;
-
-  @AllowNull(false)
-  @Column
-  username: string;
-
-  @AllowNull(false)
-  @Column
-  password: string;
-
-  // @AllowNull(false)
-  @Column
-  role: Role;
+  invitationStatus: boolean;
 
   @Column
-  registrationConfirmationStatus: boolean;
-
-  @Column
-  registrationConfirmationToken: string;
+  invitationToken: string;
 
   @Column(DataType.DATE)
   createdAt: Date;

@@ -1,36 +1,49 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { CustomLogger } from 'src/common/loggers/winston.logger';
-import { CheckItemExistance, checkItemDuplicate } from 'src/common/utils';
+import { CheckItemExistance, checkItemDuplicate, generateConfirmationToken } from 'src/common/utils';
 import { UserService } from '../../../src/modules/user/user.service';
 import { CreateUserDto } from '../../../src/modules/user/dtos/create-user.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-  ) {}
+
+    @Inject(MailService)
+    private readonly mailService: MailService,
+  ) { }
 
   private readonly logger = new CustomLogger();
 
   async signUp(createUserDto: CreateUserDto, transaction: any) {
-    const username = createUserDto.username;
+    const { username, email } = createUserDto;
     const existingUser = await this.userService.findOneByUsername(username);
 
-    checkItemDuplicate(existingUser, 'Username is arleady exist!');
+    checkItemDuplicate(existingUser, 'Username is already registered!');
+
+    // Generate a confirmation token (you can use a library like `crypto` for this)
+    const confirmationToken = generateConfirmationToken();
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    // TODO: use spread uperator to spread the DTO //Done
     const user = await this.userService.create(
       {
         ...createUserDto,
         password: hashedPassword,
+        registrationConfirmationToken: confirmationToken, // Store the confirmation token
+        registrationConfirmationStatus: false, // Set confirmation status to false initially
       },
       transaction,
     );
+
+    // Send a confirmation email with a link/token
+    const confirmationLink = `https://realtime.com/confirm/${confirmationToken}`;
+    this.mailService.sendConfirmationEmail(email, 'Confirm your registration', `Please click the following link to confirm your registration: ${confirmationLink}`);
+
     this.logger.log(
       `Attempting to create user with username ${createUserDto.username}`,
     );

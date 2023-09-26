@@ -7,12 +7,16 @@ import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthController } from './modules/auth/auth.controller';
 import { AuthService } from './modules/auth/auth.service';
+import { StaffModule } from './modules/staff/staff.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
     DatabaseModule,
     UserModule,
     AuthModule,
+    StaffModule,
+    MailModule,
     ConfigModule.forRoot({
       load: [config],
       isGlobal: true
