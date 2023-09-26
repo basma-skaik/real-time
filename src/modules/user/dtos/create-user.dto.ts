@@ -26,4 +26,8 @@ export class CreateUserDto {
   })
   password: string;
 
+  registrationConfirmationToken: string; // Include this field for registration confirmation
+  
+  registrationConfirmationStatus: boolean; // Include this field for registration confirmation
+
 }
