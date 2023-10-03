@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { REPOSITORIES } from 'src/common/constants';
 import { CustomLogger } from 'src/common/loggers/winston.logger';
 import { CheckItemExistance } from 'src/common/utils';
 import { User } from './user.model';
+import { Transaction } from 'sequelize';
 
 @Injectable()
 export class UserService {
@@ -23,6 +24,29 @@ export class UserService {
       `Attempting to create user with username ${createUserDto.username}`,
     );
     return user;
+  }
+
+  async confirmRegistration(
+    confirmationToken: string,
+    transaction: Transaction,
+  ): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { registrationConfirmationToken: confirmationToken },
+    });
+
+    CheckItemExistance(user);
+
+    if (user.registrationConfirmationStatus) {
+      throw new HttpException(
+        'User has already been confirmed!',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    user.registrationConfirmationStatus = true;
+
+    await user.save({ transaction });
+    return true;
   }
 
   async findAll() {

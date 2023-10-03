@@ -1,81 +1,77 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { REPOSITORIES } from 'src/common/constants';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { REPOSITORIES, Role } from 'src/common/constants';
 import { CustomLogger } from 'src/common/loggers/winston.logger';
-import { CheckItemExistance } from 'src/common/utils';
+import { CheckItemExistance, generateToken } from 'src/common/utils';
 import { Staff } from './staff.model';
+import { UserService } from '../user/user.service';
+import { Transaction } from 'sequelize';
+import { MailService } from '../mail/mail.service';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class StaffService {
   constructor(
     @Inject(REPOSITORIES.STAFF_REPOSITORY)
     private staffRepository: typeof Staff,
+    private userService: UserService,
+    private mailService: MailService,
   ) {}
 
-  // private readonly logger = new CustomLogger();
+  private readonly logger = new CustomLogger();
 
-  // async create(createUserDto: CreateUserDto, transaction: any) {
-  //   const user = await this.userRepository.create(createUserDto, {
-  //     transaction,
-  //   });
-  //   this.logger.log(
-  //     `Attempting to create user with username ${createUserDto.username}`,
-  //   );
-  //   return user;
-  // }
+  async inviteSupportStaff(userId: number, transaction: Transaction) {
+    const user = await this.userService.findOne(userId);
+    CheckItemExistance(user, 'User not found!');
 
-  // async findAll() {
-  //   this.logger.log(`Attempting to find all users`);
-  //   return this.userRepository.findAll();
-  // }
+    if (user.registrationConfirmationStatus === false) {
+      throw new HttpException(
+        'User not regist tot the system',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const invitationToken = generateToken();
 
-  // async findAllByIds(userIds: number[]) {
-  //   this.logger.log(`Attempting to find all users by IDs: ${userIds}`);
-  //   return this.userRepository.findAll({
-  //     where: {
-  //       id: userIds,
-  //     },
-  //   });
-  // }
+    const staff = await this.staffRepository.create(
+      {
+        userId: user.id,
+        invitationStatus: false, // Initial status is not accepted
+        invitationToken: invitationToken,
+      },
+      { transaction },
+    );
+    this.mailService.sendConfirmationEmail(
+      user.email,
+      'invitation to Support Stuff',
+      `Please click the following code to confirm your invitation:  ${invitationToken}`,
+    );
 
-  // async findOne(id: number, options?: any) {
-  //   const user = await this.userRepository.findOne({
-  //     where: { id },
-  //     ...options,
-  //   });
+    this.logger.log(
+      `Attempting to invite user with username ${user.username} to support stuff`,
+    );
+    return { message: `Sending invintionToken to ${user.username}`, staff };
+  }
 
-  //   CheckItemExistance(user, 'User not found!');
+  async confirmInvitation(invitationToken: string, transaction: Transaction) {
+    const stuff = await this.staffRepository.findOne({
+      where: { invitationToken },
+    });
 
-  //   this.logger.log(`Attempting to find user with id ${id}`);
-  //   return user;
-  // }
+    CheckItemExistance(stuff);
 
-  // async findOneByUsername(username: string) {
-  //   const user = await this.userRepository.findOne({ where: { username } });
-  //   return user;
-  // }
+    const user = await this.userService.findOne(stuff.userId);
 
-  // async update(id: number, attrs: UpdateUserDto, userId: number) {
-  //   const user = await this.userRepository.findOne({ where: { id } });
+    if (stuff.invitationStatus) {
+      throw new HttpException(
+        'User has already been invited!',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-  //   CheckItemExistance(user, 'User not found!');
+    stuff.invitationStatus = true;
+    user.role = Role.supportStaff;
 
-  //   await user.update({
-  //     ...attrs,
-  //     updatedBy: userId,
-  //   });
-  //   this.logger.log(`Attempting to update user with id ${id}`);
-  //   return user;
-  // }
-
-  // async remove(id: number, userId: number) {
-  //   const user = await this.userRepository.findOne({ where: { id } });
-
-  //   CheckItemExistance(user, 'User not found!');
-
-  //   // Perform soft delete
-  //   user.deletedAt = new Date();
-  //   user.deletedBy = userId;
-  //   this.logger.log(`Attempting to remove user with id ${id}`);
-  //   return user.save();
-  // }
+    await stuff.save({ transaction });
+    await user.save({ transaction });
+    return { message: 'User accept invitation' };
+  }
 }

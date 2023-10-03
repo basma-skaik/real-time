@@ -10,7 +10,7 @@ import { MailService } from './mail.service';
         secure: false,
         auth: {
           user: 'basmahskaik@gmail.com',
-          pass: 'bthf vrhn tlkr nvlg',
+          pass: 'nrqg kgof vbsc cqmm',
         },
       },
       defaults: {

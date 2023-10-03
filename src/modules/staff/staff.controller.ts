@@ -5,35 +5,35 @@ import {
   Patch,
   Delete,
   Param,
+  Post,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Public, User } from 'src/common/decorator';
+import { TransactionParam, User } from 'src/common/decorator';
 import { Role } from 'src/common/constants';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { StaffService } from './staff.service';
-
-// @Roles(Role.Admin)
+import { TransactionInterceptor } from 'src/common/interceptors';
+import { Transaction } from 'sequelize';
 @Controller('staff')
 export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
-  // @Get()
-  // async findAllUsers() {
-  //   return this.userService.findAll();
-  // }
+  @Roles(Role.Admin)
+  @Post('invintion/:userId')
+  @UseInterceptors(TransactionInterceptor)
+  async inviteSupportStaff(
+    @Param('userId') userId: number,
+    @TransactionParam() transaction: Transaction,
+  ) {
+    return this.staffService.inviteSupportStaff(userId, transaction);
+  }
 
-  // @Public()
-  // @Get(':id')
-  // async findUser(@Param('id') id: string) {
-  //   return this.userService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @User() user) {
-  //   return this.userService.update(+id, updateUserDto, user.id);
-  // }
-
-  // @Delete(':id')
-  // async deleteUser(@Param('id') id: string, @User() user) {
-  //   return this.userService.remove(+id, user.id);
-  // }
+  @Post('confirmInvintion')
+  @UseInterceptors(TransactionInterceptor)
+  async confirmInvitation(
+    @Body('invitationToken') invitationToken: string,
+    @TransactionParam() transaction: Transaction,
+  ) {
+    return this.staffService.confirmInvitation(invitationToken, transaction);
+  }
 }
