@@ -34,4 +34,14 @@ export class AuthController {
   ) {
     return this.authService.signUp(createUserDto, transaction);
   }
+
+  @Public()
+  @Post('confirmRegistration')
+  @UseInterceptors(TransactionInterceptor)
+  async confirmRegistration(
+    @Body('confirmationToken') confirmationToken: string,
+    @TransactionParam() transaction: Transaction,
+  ) {
+    return this.authService.confirmRegistration(confirmationToken, transaction);
+  }
 }
