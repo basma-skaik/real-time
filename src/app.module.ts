@@ -9,6 +9,7 @@ import { AuthController } from './modules/auth/auth.controller';
 import { AuthService } from './modules/auth/auth.service';
 import { StaffModule } from './modules/staff/staff.module';
 import { MailModule } from './modules/mail/mail.module';
+import { TicketModule } from './modules/ticket/ticket.module';
 
 @Module({
   imports: [
@@ -17,12 +18,13 @@ import { MailModule } from './modules/mail/mail.module';
     AuthModule,
     StaffModule,
     MailModule,
+    TicketModule,
     ConfigModule.forRoot({
       load: [config],
-      isGlobal: true
+      isGlobal: true,
     }),
-],
-  controllers: [ AuthController],
-  providers: [ AuthService, CustomLogger],
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, CustomLogger],
 })
 export class AppModule {}
