@@ -16,7 +16,7 @@ export class UserService {
 
   private readonly logger = new CustomLogger();
 
-  async create(createUserDto: CreateUserDto, transaction: any) {
+  async create(createUserDto: CreateUserDto, transaction: Transaction) {
     const user = await this.userRepository.create(createUserDto, {
       transaction,
     });

@@ -21,13 +21,14 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  @Matches(/^(?=.*[a-z])(?=.*\d)[a-z\d]{8,}$/, { 
-    message: 'Password must contain at least 8 characters, one lowercase letter and one digit.',
+  @Matches(/^(?=.*[a-z])(?=.*\d)[a-z\d]{8,}$/, {
+    message:
+      'Password must contain at least 8 characters, one lowercase letter and one digit.',
   })
   password: string;
 
+  @Transform(trimmer)
   registrationConfirmationToken: string; // Include this field for registration confirmation
-  
-  registrationConfirmationStatus: boolean; // Include this field for registration confirmation
 
+  registrationConfirmationStatus: boolean; // Include this field for registration confirmation
 }

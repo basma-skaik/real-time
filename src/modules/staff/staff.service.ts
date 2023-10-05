@@ -6,7 +6,6 @@ import { Staff } from './staff.model';
 import { UserService } from '../user/user.service';
 import { Transaction } from 'sequelize';
 import { MailService } from '../mail/mail.service';
-import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class StaffService {
@@ -41,37 +40,49 @@ export class StaffService {
     );
     this.mailService.sendConfirmationEmail(
       user.email,
-      'invitation to Support Stuff',
+      'invitation to Support Staff',
       `Please click the following code to confirm your invitation:  ${invitationToken}`,
     );
 
     this.logger.log(
-      `Attempting to invite user with username ${user.username} to support stuff`,
+      `Attempting to invite user with username ${user.username} to support staff`,
     );
     return { message: `Sending invintionToken to ${user.username}`, staff };
   }
 
   async confirmInvitation(invitationToken: string, transaction: Transaction) {
-    const stuff = await this.staffRepository.findOne({
+    const staff = await this.staffRepository.findOne({
       where: { invitationToken },
     });
 
-    CheckItemExistance(stuff);
+    CheckItemExistance(staff);
 
-    const user = await this.userService.findOne(stuff.userId);
+    const user = await this.userService.findOne(staff.userId);
 
-    if (stuff.invitationStatus) {
+    if (staff.invitationStatus) {
       throw new HttpException(
         'User has already been invited!',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    stuff.invitationStatus = true;
+    staff.invitationStatus = true;
     user.role = Role.supportStaff;
 
-    await stuff.save({ transaction });
+    await staff.save({ transaction });
     await user.save({ transaction });
     return { message: 'User accept invitation' };
+  }
+
+  async findOne(id: number) {
+    const staff = await this.staffRepository.findOne({ where: { id } });
+    CheckItemExistance(staff, 'Staff is not found!');
+    return staff;
+  }
+
+  async findStaffByUserId(userId: number) {
+    const staff = await this.staffRepository.findOne({ where: { userId } });
+    CheckItemExistance(staff, 'Staff is not found!');
+    return staff;
   }
 }

@@ -4,6 +4,7 @@ import { DATABASE_CONFIG, PROVIDERS } from 'src/common/constants';
 import { TransactionInterceptorProvider } from 'src/common/interceptors/transaction.interceptor';
 import { User } from '../../../src/modules/user/user.model';
 import { Staff } from '../staff/staff.model';
+import { Ticket } from '../ticket/ticket.model';
 
 // Create a factory function to provide Sequelize instance
 export const sequelizeFactory = {
@@ -22,10 +23,7 @@ export const databaseProvider = [
   {
     provide: PROVIDERS.DATABASE_PROVIDER,
     useFactory: (sequelize: Sequelize) => {
-      sequelize.addModels([
-        User,
-        Staff
-      ]);
+      sequelize.addModels([User, Staff, Ticket]);
       return sequelize;
     },
     inject: [Sequelize],

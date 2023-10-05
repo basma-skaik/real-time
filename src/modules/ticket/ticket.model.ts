@@ -4,21 +4,21 @@ import {
   Model,
   PrimaryKey,
   AutoIncrement,
+  AllowNull,
   DataType,
   ForeignKey,
   BelongsTo,
-  HasMany,
 } from 'sequelize-typescript';
 import { User } from '../user/user.model';
-import { Ticket } from '../ticket/ticket.model';
+import { Staff } from '../staff/staff.model';
 
 @Table({
-  tableName: 'Staff',
+  tableName: 'Ticket',
   timestamps: true,
   underscored: true,
   paranoid: true,
 })
-export class Staff extends Model<Staff> {
+export class Ticket extends Model<Ticket> {
   @PrimaryKey
   @AutoIncrement
   @Column
@@ -31,11 +31,43 @@ export class Staff extends Model<Staff> {
   @BelongsTo(() => User)
   user: User;
 
+  @ForeignKey(() => Staff)
   @Column
-  invitationStatus: boolean;
+  assignedStaffId: number;
 
+  @BelongsTo(() => Staff)
+  assignedStaff: Staff;
+
+  @Column(
+    DataType.ENUM(
+      'open',
+      'assigned',
+      'scheduled',
+      'inProgress',
+      'resolved',
+      'closed',
+    ),
+  )
+  status: string;
+
+  @AllowNull(false)
+  @Column(DataType.ENUM('low', 'medium', 'high', 'critical'))
+  priority: string;
+
+  @AllowNull(false)
   @Column
-  invitationToken: string;
+  category: string;
+
+  @AllowNull(false)
+  @Column
+  title: string;
+
+  @AllowNull(false)
+  @Column
+  description: string;
+
+  @Column(DataType.DATE)
+  scheduled_date: Date;
 
   @Column(DataType.DATE)
   createdAt: Date;
@@ -54,7 +86,4 @@ export class Staff extends Model<Staff> {
 
   @Column(DataType.INTEGER)
   deletedBy: number | null;
-
-  @HasMany(() => Ticket)
-  ticket: Ticket[];
 }

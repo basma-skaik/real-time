@@ -94,9 +94,7 @@ export class AuthService {
 
     const payload = { id: user.id };
 
-    this.logger.log(
-      `SignIn user with username ${username} and password ${password}`,
-    );
+    this.logger.log(`SignIn user with username ${username}`);
     return {
       user,
       access_token: await this.jwtService.signAsync(payload),
